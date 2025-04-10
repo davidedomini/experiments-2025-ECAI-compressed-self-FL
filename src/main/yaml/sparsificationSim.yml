@@ -1,0 +1,126 @@
+incarnation: scafi
+
+_constants:
+  retentionTime: &retentionTime 15.0
+  skewness: &skewness 0.5
+
+variables:
+  seed: &seed
+    min: 0
+    max: 5
+    step: 1
+    default: 3
+  epochs: &epochs
+    formula: 2
+  aggregateLocalEvery: &aggregateLocalEvery
+    formula: 3
+  areas: &areas
+    type: ArbitraryVariable
+    parameters: [9, [9, 5, 3]]
+  sparsity: &sparsity
+    type: ArbitraryVariable
+    parameters: [0.0, [0.0, 0.3, 0.5, 0.7, 0.9] ]
+  batchSize: &batchSize
+    formula: 64
+  samplePerArea: &samplePerArea
+    formula: if(areas == 9) 9 else if(areas == 5) 15 else 25
+    language: scala
+  dataShuffle: &dataShuffle
+    formula: >
+      true
+  dataFraction: &dataFraction
+    formula: 0.4
+  longSideNodes: &longSideNodes
+    formula: 7
+  shortSideNodes: &shortSideNodes
+    formula: 8
+  totalNodes: &totalNodes
+    formula: longSideNodes * shortSideNodes
+  initNN: &initNN
+    language: scala
+    formula: |
+      import it.unibo.scafi.interop.PythonModules.utils
+      utils.init_cnn(seed.asInstanceOf[Double].toInt, sparsity.asInstanceOf[Double])
+  lossThreshold: &lossThreshold
+    type: ArbitraryVariable
+    parameters: [20.0, [20.0, 40.0, 80.0]]
+seeds:
+  scenario: *seed
+  simulation: *seed
+
+network-model:
+  type: ConnectWithinDistance
+  parameters: [1.5]
+
+_gradient: &gradient
+  - time-distribution:
+      type: DiracComb
+      parameters: [ 0.1, 1 ]
+    type: Event
+    actions:
+      - type: RunScafiProgram
+        parameters: [it.unibo.scafi.OpportunisticFederatedLearning, *retentionTime]
+  - program: send
+
+monitors:
+  - type: it.unibo.alchemist.model.monitors.DistributedTestSetEvaluation
+    parameters: [*seed, *epochs, *aggregateLocalEvery, *areas, *dataShuffle, *lossThreshold, *sparsity]
+
+layers:
+  - type: PhenomenaDistribution
+    parameters: [ 0, 0, *longSideNodes, *shortSideNodes, *areas, *samplePerArea, *dataShuffle, *dataFraction, *seed, true]
+    molecule: Phenomena
+  - type: PhenomenaDistribution
+    parameters: [ 0, 0, *longSideNodes, *shortSideNodes, *areas, *samplePerArea, *dataShuffle, 1, *seed, false]
+    molecule: TestSetPhenomena
+  - type: IdPhenomenaLayer
+    parameters: [Phenomena]
+    molecule: IdPhenomena
+deployments:
+  - type: Grid
+    parameters: [0, 0, *longSideNodes, *shortSideNodes, 1, 1, *skewness, *skewness]
+    contents:
+      - molecule: Seed
+        concentration: *seed
+      - molecule: LossThreshold
+        concentration: *lossThreshold
+      - molecule: Epochs
+        concentration: *epochs
+      - molecule: Areas
+        concentration: *areas
+      - molecule: AggregateLocalEvery
+        concentration: *aggregateLocalEvery
+      - molecule: BatchSize
+        concentration: *batchSize
+      - molecule: Sparsity
+        concentration: *sparsity
+    programs: *gradient
+
+terminate:
+  type: AfterTime
+  parameters: 40.0
+
+export:
+  - type: CSVExporter
+    parameters:
+      fileNameRoot: "experiment"
+      interval: 1.0
+      exportPath: "data"
+    data:
+      - time
+      - type: AreaCountExporter
+      - type: AreaDiscrepancyExporter
+        parameters: [ ]
+      - type: AreaCorrectnessExporter
+      - type: AverageLossExporter
+      - type: AverageAccuracyExporter
+      - molecule: TrainLoss
+        aggregators: [min, max, mean, variance]
+        value-filter: onlyFinite
+        precision: 3
+      - molecule: ValidationLoss
+        aggregators: [min, max, mean, variance]
+        value-filter: onlyfinite
+      - molecule: ValidationAccuracy
+        aggregators: [min, max, mean, variance]
+        value-filter: onlyfinite

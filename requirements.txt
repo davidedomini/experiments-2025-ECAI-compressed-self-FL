@@ -1,0 +1,9 @@
+matplotlib ==3.8.4
+xarray ==2024.3.0
+torch ==2.5.0
+torchvision ==0.2.2
+numpy
+pandas
+wheel
+setuptools
+seaborn
