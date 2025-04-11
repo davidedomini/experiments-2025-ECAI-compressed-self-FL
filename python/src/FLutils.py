@@ -137,10 +137,10 @@ def dataset_to_nodes_partitioning(areas: int, random_seed: int, shuffling: bool 
     return index_mapping
 
 
-def init_cnn(seed, sparsity=0.0):
+def init_cnn(seed, sparsity=0.0, pre_pruning=False):
     torch.manual_seed(seed)
     model = CNNMnist()
-    if not sparsity == 0.0:
+    if pre_pruning:
         model = post_prune_model(model, sparsity)
     torch.save(model.state_dict(), f'networks/initial_model_seed_{seed}')
 

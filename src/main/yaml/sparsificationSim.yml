@@ -40,7 +40,7 @@ variables:
     language: scala
     formula: |
       import it.unibo.scafi.interop.PythonModules.utils
-      utils.init_cnn(seed.asInstanceOf[Double].toInt, sparsity.asInstanceOf[Double])
+      utils.init_cnn(seed.asInstanceOf[Double].toInt, sparsity.asInstanceOf[Double], false)
   lossThreshold: &lossThreshold
     type: ArbitraryVariable
     parameters: [20.0, [20.0, 40.0, 80.0]]
