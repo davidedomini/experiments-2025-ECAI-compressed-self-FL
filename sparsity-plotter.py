@@ -110,7 +110,9 @@ def plot(data, sparsity, threshold, metric, out_dir):
     plt.xlabel("Time")
     plt.ylabel(metric_to_symbol(metric))
     plt.legend(title="Areas")
-    plt.ylim(0, 1)
+    if 'Accuracy' in metric:
+        plt.ylim(0, 1)
+    # plt.ylim(0, 1)
     plt.tight_layout()
     # plt.grid(True)
     plt.savefig(f'{out_dir}/{metric}-sparsity-{sparsity}-threshold {threshold}.pdf')
@@ -129,10 +131,9 @@ plt.rc('text.latex', preamble=r'\usepackage{amsmath,amssymb,amsfonts}')
 
 charts_dir = 'charts/sparsity-gfl/'
 Path(charts_dir).mkdir(parents=True, exist_ok=True)
-path = 'data/'
-threshold = [20.0, 40.0, 80.0]
-sparsity = [0.5, 0.9, 0.95, 0.99]
-# metrics = ['AreaCount', 'AreaCorrectness', 'TrainLoss[mean]', 'ValidationLoss[mean]', 'ValidationAccuracy[mean]']
+path = 'data-sparsification/'
+threshold = [20.0]
+sparsity = [0.0, 0.3, 0.5, 0.7, 0.9]
 metrics = ['AreaCount', 'ValidationAccuracy[mean]']
 for t in threshold:
     for s in sparsity:
