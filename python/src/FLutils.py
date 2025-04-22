@@ -200,3 +200,11 @@ def train_val_split(data, seed):
     validation_size = len(data) - train_size
     train_set, val_set = random_split(data, [train_size, validation_size])
     return train_set, val_set
+
+def quantization(model):
+    model_q = torch.ao.quantization.quantize_dynamic(
+        model,
+        {torch.nn.Linear},
+        dtype=torch.qint8
+    )
+    return model_q
