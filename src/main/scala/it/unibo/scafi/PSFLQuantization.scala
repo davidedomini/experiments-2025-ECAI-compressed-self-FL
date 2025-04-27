@@ -254,20 +254,3 @@ class PSFLQuantization extends AggregateProgram
     }.leaderId
   }
 }
-import Builtins.Bounded
-private case class Candidacy(symBreaker: Int, distance: Double, leaderId: Int)
-
-private object BoundedMessage {
-  implicit object BoundedMsg extends Bounded[Candidacy] {
-    override def bottom: Candidacy =
-      Candidacy(implicitly[Bounded[Int]].bottom, implicitly[Bounded[Double]].bottom, implicitly[Bounded[ID]].bottom)
-
-    override def top: Candidacy =
-      Candidacy(implicitly[Bounded[Int]].top, implicitly[Bounded[Double]].top, implicitly[Bounded[ID]].top)
-
-    override def compare(a: Candidacy, b: Candidacy): Int =
-      List(a.symBreaker.compareTo(b.symBreaker), a.distance.compareTo(b.distance), a.leaderId.compareTo(b.leaderId))
-        .collectFirst { case x if x != 0 => x }
-        .getOrElse(0)
-  }
-}
